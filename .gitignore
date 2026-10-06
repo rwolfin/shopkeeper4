@@ -1,0 +1,7 @@
+/dist/
+/vendor/
+/tests/ui/*.sqlite*
+/.idea/
+/.vscode/
+*.log
+.env
