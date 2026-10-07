@@ -124,3 +124,37 @@ div.minicolors { /*width: 25px; border: 1px solid #ccc; border-radius: 4px;*/ }
 /* modals */
 .modal-open .modal { overflow-x: hidden; overflow-y: auto; }
 
+/* MODX 3 manager layout: let the document size the component content. */
+html,
+body {
+    height: auto;
+    min-height: 100%;
+}
+
+.amod-wrapper,
+.amod-container,
+.container-overflow-b {
+    height: auto !important;
+    min-height: 0;
+    overflow: visible;
+}
+
+.amod-wrapper {
+    min-height: 100vh;
+}
+
+.container-overflow-a .amod-container-b,
+.container-overflow-b .amod-container-b,
+.container-overflow-b .amod-container-c {
+    height: auto !important;
+    min-height: 0;
+    padding: 20px;
+    overflow: visible !important;
+}
+
+.container-overflow-b .panel-top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    margin: 0 0 20px;
+}
