@@ -1,4 +1,5 @@
 /dist/
+/assets/components/shopkeeper4/mgr/mgr/
 /vendor/
 /tests/ui/*.sqlite*
 /.idea/

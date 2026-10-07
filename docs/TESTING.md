@@ -16,7 +16,7 @@ Set `SK4_MODX_CORE` to the absolute MODX 3 core directory, then run from reposit
 php -S 127.0.0.1:8764 tests/ui/router.php
 ```
 
-Open `http://127.0.0.1:8764/` and `/storefront`. The harness uses actual ExtJS from MODX, the actual MODX Processor base class and production Shopkeeper4 processor/Store/HTML. MODX session, ACL, cache and mail services are test adapters. The database is local SQLite with invented contacts; no mail is sent. The fixture schema is deliberately isolated. Never expose this harness to a public network.
+Open `http://127.0.0.1:8764/` and `/storefront`. The harness exercises the checkout fixture against the production Shopkeeper4 Store/HTML and a MODX Processor adapter. It does not reproduce the manager pages; review those in a MODX 3 installation. MODX session, ACL, cache and mail services are test adapters. The database is local SQLite with invented contacts; no mail is sent. The fixture schema is deliberately isolated. Never expose this harness to a public network.
 
 ## Required site acceptance
 

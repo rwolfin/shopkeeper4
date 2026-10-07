@@ -41,6 +41,7 @@ $package->setAttribute('requires',['modx'=>'>=3.0.0,<4.0.0','php'=>'>=8.1.0']);$
 $zip=new ZipArchive();if($zip->open($output.$signature.'.transport.zip',ZipArchive::CREATE|ZipArchive::OVERWRITE)!==true) throw new RuntimeException('Cannot create ZIP.');
 foreach(new RecursiveIteratorIterator(new RecursiveDirectoryIterator($output.$signature,FilesystemIterator::SKIP_DOTS)) as $file) if($file->isFile()){
     $relative=str_replace('\\','/',substr($file->getPathname(),strlen($output)));
+    if(str_starts_with($relative,'assets/components/shopkeeper4/mgr/mgr/')) continue;
     if(!$zip->addFromString($relative,file_get_contents($file->getPathname()))) throw new RuntimeException('ZIP entry failed: '.$relative);
 }
 if(!$zip->close()) throw new RuntimeException('ZIP close failed.');echo $output.$signature.'.transport.zip'.PHP_EOL;

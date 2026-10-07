@@ -1,3 +1,3 @@
 <?php
-$_lang['shopkeeper4']='Shopkeeper 4';
-$_lang['shopkeeper4.menu_desc']='Orders, reports and store settings';
+$_lang['shopkeeper4'] = 'Shopkeeper 4 — Order management';
+$_lang['shopkeeper4.menu_desc'] = 'Shopkeeper 4 orders, store settings and statistics';

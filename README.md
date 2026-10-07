@@ -1,26 +1,82 @@
-# Shopkeeper 4
+# Shopkeeper 4 для MODX 3
 
-Free order management and shopping cart for **MODX Revolution 3**, maintained by **rwolfin**. GPL-3.0-only. See [provenance](NOTICE.md).
+Автор и сопровождающий новой версии: **rwolfin**. Бесплатное распространение, GPL-3.0-only. История происхождения — [NOTICE.md](NOTICE.md).
 
-**4.0.0-beta1** — a new implementation with a manager interface built on MODX's bundled ExtJS. No Bootstrap, AngularJS, jQuery or Flash dependency in the component. The statistics panel renders SVG inside ExtJS.
+Версия **4.0.0-beta1**. В Shopkeeper 4 перенесены исходные страницы управления заказами, настроек и статистики Shopkeeper 3 с Bootstrap-оформлением, адаптированные для MODX 3. Интерфейс работает с новой схемой заказов Shopkeeper 4. Перед использованием в магазине проверьте установку и оформление заказа на копии своего сайта. Границы выполненной проверки приведены в [docs/TESTING.md](docs/TESTING.md).
 
-[Русская инструкция: установка, настройка, примеры](README.ru.md)
+## Возможности
 
-Features: editable orders and item options, status changes, dates and search, CSV, history and mail retries, configurable contacts/delivery/currencies, stock reservations, decimal arithmetic, CSRF protection and idempotent checkout.
+- Заказы: период дат и быстрые периоды, фильтр статусов, сортировка, постраничный список, массовая смена статуса, CSV-экспорт.
+- Редактор: просмотр и изменение товаров, параметров с доплатой, количества, цены, доставки, оплаты и контактных данных; заметка и предпросмотр.
+- Настройки: валюты, статусы/цвета/чанки писем, доставка и бесплатный порог, способы оплаты, контактные поля и столбцы заказов.
+- Статистика: количество заказов по статусам за выбранный период, график C3 и таблица.
+- Витрина: AJAX-корзина без jQuery, несколько представлений одной корзины, отдельная корзина каждого контекста, оформление, дробные количества по настройке, TV цены и параметров.
+- Защита: серверный расчёт цены, CSRF, защита от повторного оформления, транзакции, контроль конфликтов редактора, возврат остатков при отмене.
 
-Requirements: MODX 3.x, 64-bit PHP 8.1+, pdo_mysql, mbstring, MySQL/MariaDB with InnoDB. Stock tracking also requires InnoDB for MODX's TV values table. Email uses the site's MODX mail configuration.
+## Установка
 
-This is not a drop-in upgrade of Shopkeeper 3. It uses its own tables and new snippet/plugin contracts. Read [migration notes](docs/MIGRATION.md) and [test scope](docs/TESTING.md).
+1. Требуются MODX **3.x**, PHP **8.1+ 64-bit**, расширения `pdo_mysql`, `mbstring`, MySQL/MariaDB с InnoDB.
+2. Сделайте резервную копию сайта и базы. Загрузите **transport.zip**, не распаковывая, через «Управление пакетами → Загрузить пакет» (или поместите в `core/packages/` и выполните поиск локальных пакетов).
+3. Установите Shopkeeper 4. Откройте «Приложения → Shopkeeper 4». Необходим доступ `settings`.
+4. В «Настройки → Общие» задайте TV цены, email менеджера, основную валюту и страницу оформления. Настройте доставку, оплату и контакты.
+5. Создайте TV `price` и привяжите его к шаблону товара. Значение: `1250.50`, без валюты и разделителей тысяч. Товар должен быть опубликован в текущем контексте.
+6. Разместите сниппеты ниже **некэшируемыми**. Проверьте письмо покупателю и менеджеру, отмену заказа, валюту и остатки.
 
-## Build
+Компонент создаёт таблицы `<prefix>shopkeeper4_config`, `orders`, `items`, `history`, `outbox` (каждое имя с префиксом `shopkeeper4_`). Таблицы Shopkeeper 3 не изменяются. Удаление пакета сохраняет таблицы заказов. Чанк письма не перезаписывается при повторной установке.
 
-With MODX 3 and its Composer dependencies available locally:
+## Подключение витрины
 
-```sh
-php _build/build.php /path/to/modx/core /path/to/fresh-output
-php tests/run.php
+В шаблоне товара:
+
+```html
+[[!Shopkeeper4Product? &id=`[[*id]]`]]
+[[!Shopkeeper4? &mode=`compact`]]
 ```
 
-The resulting `shopkeeper4-4.0.0-beta1.transport.zip` can be installed from MODX package management. The source ZIP is a repository snapshot, not an installation package.
+На странице оформления:
 
-Do not deploy the `tests` folder to a public web root. No credentials or site data belong in the GitHub repository.
+```html
+[[!Shopkeeper4? &mode=`cart`]]
+[[!Shopkeeper4? &mode=`checkout`]]
+```
+
+Вызов `Shopkeeper4` подключает JS/CSS и обрабатывает обычные POST-формы. `&js=`0`` отключает JS, формы продолжают работать при обычной отправке. Не вкладывайте готовую форму оформления в другую форму. Корзина хранится в PHP-сессии, отдельно для каждого контекста. Несколько `compact/cart` на странице синхронизируются после AJAX-запроса; отдельные независимые корзины одного контекста в этой версии не поддерживаются.
+
+Пути к `assets` и `core` берутся из MODX. Веб-точка по умолчанию: `assets/components/shopkeeper4/web.php?context=web`. Настройки сайта должны позволять PHP-сессии и запросы к этому пути. Контекст `mgr` через веб-точку запрещён.
+
+## Параметры товара
+
+Создайте TV `sk4_options` (textarea), привяжите к шаблону, заполните JSON:
+
+```json
+[
+  {"name":"size","label":"Размер","required":true,"values":[
+    {"id":"m","label":"M","price":"0.00"},
+    {"id":"xl","label":"XL","price":"150.00"}
+  ]}
+]
+```
+
+Доплата применяется к каждой единице товара. Цена и допустимые варианты читаются на сервере из TV; переданные браузером цены не используются. В менеджере можно вручную менять цены и добавлять произвольную позицию с ID товара `0`; у неё нет складского учёта. Для новой позиции с реальным ID и обязательными параметрами укажите в окне параметров ключ TV и ID варианта.
+
+## Валюты, доставка и остатки
+
+Курс означает стоимость единицы валюты в общей расчётной единице. Пример: RUB = `1`, USD = `100`; товар 1000 RUB будет стоить 10 USD. Цена товара, доплаты и доставка задаются в основной валюте; заказ сохраняет снимок цен и код валюты. Смена курсов не пересчитывает прошлые заказы. Поддерживается две десятичные цифры денежных сумм, три у количества, четыре у курса. Отрицательные цены и скидки отдельной строкой не поддерживаются.
+
+Бесплатная доставка включается при достижении порога `free_from`; `0` отключает порог. В способах оплаты хранятся названия, **это не подключение эквайринга**. Платёжный шлюз, промокоды, налоги, автоматические курсы валют и службы доставки требуют отдельных интеграций.
+
+Для складского учёта включите «Учитывать остатки», задайте TV `inventory` и сохраните **явное значение** для каждого товара. Значение TV по умолчанию не подходит для блокировки строки. Таблица MODX `site_tmplvar_contentvalues` должна быть InnoDB; автоматически менять движок компонент не будет. Остаток резервируется при заказе, возвращается при переходе в статус с флагом «Возврат остатков», повторно резервируется при восстановлении статуса. Удалённый заказ скрывается из интерфейса, данные остаются в БД с `deleted_at`.
+
+## Письма и интеграции
+
+Настройте SMTP в MODX. Чанк `Shopkeeper4Mail` получает `id`, `status`, `items`, `contacts`, `total`, `currency`, `delivery`, `tracking`. `items` — готовые строки HTML-таблицы, `contacts` — экранированные абзацы. Создавайте собственный чанк и указывайте его имя в настройках статуса. Письма хранятся в `outbox`; ошибка отправки не отменяет заказ, повтор доступен во вкладке «История и письма».
+
+События после успешного сохранения: `OnShopkeeper4CartChanged` (`action`), `OnShopkeeper4OrderCreated` (`order_id`), `OnShopkeeper4OrderUpdated` (`order_id`), `OnShopkeeper4StatusChanged` (`order_ids`, `status_id`). Исключение плагина логируется и не откатывает заказ. Изменение статуса внутри редактора вызывает `OrderUpdated`; массовая смена — `StatusChanged`.
+
+Дополнительные сниппеты: `Shopkeeper4Options` (список доставки/оплаты/валют), `Shopkeeper4FormIt` (hook для своей формы), `Shopkeeper4Number` (форматирование числа), `Shopkeeper4Currency` (конвертация). Их параметры и API — [docs/API.md](docs/API.md).
+
+## Переход со старой версии и GitHub
+
+Это **не замена transport.zip с сохранением старых вызовов**. Сначала прочтите [docs/MIGRATION.md](docs/MIGRATION.md). Старая схема, JS API, события, чанки и MIGX-модели автоматически не подключаются. Для собственных моделей предусмотрен интерфейс `ProductProvider`.
+
+Исходный архив содержит `_build/`, `core/`, `assets/`, тесты, документацию и лицензию. Распакуйте его в будущий репозиторий GitHub. Для сборки: `php _build/build.php /path/to/modx/core /path/to/fresh-output`. Результат — установочный transport.zip. Автор новой версии указан как rwolfin; сведения о функциональном предшественнике сохранены в NOTICE.
